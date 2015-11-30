@@ -1,9 +1,4 @@
-    ; ----------------------------------------------------------------------------------------
-    ; Writes "Hello, World" to the console using only system calls. Runs on 64-bit Linux only.
-    ; To assemble and run:
-    ;
-    ;     nasm -felf64 hello.asm && ld hello.o && ./a.out
-    ; ----------------------------------------------------------------------------------------
+    ;kpelton 2015
     global  _start
     %define WIDTH 80
     %define HEIGHT 25 
