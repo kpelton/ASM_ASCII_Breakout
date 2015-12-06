@@ -6,6 +6,9 @@
     %define PADDLE_LEN  10 
     %define BALL_X 1  
     %define BALL_Y 1  
+    %define BALL_VX 0  
+    %define BALL_VY -1  
+    
     %define BALL_CHAR 0x11
     %define LCHAR 'a'
     %define RCHAR 'd'
@@ -14,13 +17,14 @@
     extern getchar
     extern fcntl
     extern usleep
+    extern sprintf
+
 
     global main
     section .data    
         message:    db      " ",0      ; note the newline at the end
         newline: db 0xd,0xa,0
         noecho: db "stty raw -echo isig",0
-        
         purple:db   0x1b,"[1;45m",0
         green:db   0x1b,"[1;42m",0
         white:db   0x1b,"[1;47m",0
@@ -31,8 +35,14 @@
         ball_char: db "@",0 
         screen:
             %rep 25 
-            dq 0,0,0,0,0,0,0,0,0,0
+            dq 1,1,1,1,1,1,1,1,1,1
             %endrep 
+
+        screen2:
+            %rep 30 
+            dq 0x55,0x55,0x55,0x55,0x55,0x55,0x55,0x55,0x55,0x55
+            %endrep 
+
 
         paddle_x:
             dq PADDLE_X
@@ -44,9 +54,16 @@
             dq BALL_Y
         ball_x:
             dq BALL_X
+     
+        ball_vy:
+            dq BALL_VY
+        ball_vx:
+            dq BALL_VX
 
+       cursor_loc:
+            db 0x1b, "[%d;%dH",0
         buffer:
-            dq 0
+            dq 0,0,0
 
     section .text
     setup_terminal:
@@ -65,33 +82,31 @@
         mov  rdi,0
         mov  rax,0
         call fcntl
+         mov rax,clear_screen
+        call print_func
+
+
         ret
 
     main:
         call setup_terminal
 
 
-        mov rax,screen+79
-        mov BYTE [rax],1
 
         ;hide_cursor
         mov rax,hide_cursor
-        call print_func
+        ;call print_func
+
         
         main_loop:
         mov rax,screen
         call zero_screen_array
-        mov rax,screen+79
-        mov BYTE [rax],1
 
 
 
     ;    inc BYTE [ball_x]
         mov rax, cursor_home
         call print_func
-         mov rax,clear_screen
-;        call print_func
-
         call do_paddle
         call do_ball
         mov rax,screen
@@ -131,8 +146,13 @@
 
 
     do_ball:
+        
+
             push r11
             push rdi
+            ;calculate new ball x,y from ballvx,ballvy
+
+
             xor r11,r11
             xor rdi,rdi
             imul r11,[ball_y],WIDTH
@@ -143,29 +163,72 @@
             pop r11
             ret
 
-
+    move_cursor:
+        push rdi
+        push rcx
+        push rsi
+        push r9
+        push r11
+        push r12
+        push rdx
+        mov rdx, rdi 
+        mov rcx ,r15
+        mov rdi, buffer ;arg0 tgt string
+        mov rsi, cursor_loc           
+        call sprintf
+    
+        mov rax,buffer
+        call print_func
+        pop rdx
+        pop r12
+        pop r11
+        pop r9
+        pop rsi
+        pop rcx
+        pop rdi
+        ret
     draw_screen:
         xor rdi,rdi ;
         push rdx
         push r11
-        push r10
+        push r15
         push rdi
         mov rdx,rax
+        mov r9,screen2
         len_loop:
-            xor r10, r10 ;j
+            xor r15, r15 ;j
             inner_len_loop:
             ;calculate current offset
             imul r11,rdi,WIDTH
-            add r11,r10      
-            cmp BYTE [rdx+r11],1
+            add r11,r15      
+            mov rbp,rdx
+            add rbp,r11
+            mov  ah,[rbp]
+            mov rbp,r11
+            add rbp,r9
+            mov  al,[rbp]
+            ;check to see if it is the same as the prvious buffer
+            cmp al,ah
+            jne  do_something
+            jmp skip_color
+  
+            do_something:
+            mov rbp,r9
+            add rbp,r11
+            mov r12,rax
+            mov BYTE [rbp],ah
+            call move_cursor
+            mov rax,r12
+
+            cmp  ah,1
             je draw_green
-            cmp BYTE [rdx+r11],2
+            cmp  ah,2
             je draw_purple
-            cmp BYTE [rdx+r11],3
+            cmp  ah,3
             je draw_white
-            cmp BYTE [rdx+r11],0 
+            cmp  ah,0 
             je done_draw
-            cmp BYTE [rdx+r11],BALL_CHAR 
+            cmp  ah,BALL_CHAR 
             je draw_ball
             
 
@@ -202,18 +265,17 @@
                 call print_func
 
             skip_color:
-            inc r10
-     
-            cmp r10,WIDTH
+            inc r15     
+            cmp r15,WIDTH
             jl inner_len_loop
             ;;; inner loop done
-            mov rax,newline
-            call print_func
+            ;mov rax,newline
+            ;call print_func
             inc rdi
             cmp rdi,HEIGHT
             jl len_loop
        pop rdi
-       pop r10
+       pop r15
        pop r11
        pop rdx
        ret 
