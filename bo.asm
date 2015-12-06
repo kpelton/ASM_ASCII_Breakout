@@ -6,8 +6,8 @@
     %define PADDLE_LEN  10 
     %define BALL_X 1  
     %define BALL_Y 1  
-    %define BALL_VX 0  
-    %define BALL_VY -1  
+    %define BALL_VX -1  
+    %define BALL_VY 0 
     
     %define BALL_CHAR 0x11
     %define LCHAR 'a'
@@ -95,7 +95,7 @@
 
         ;hide_cursor
         mov rax,hide_cursor
-        ;call print_func
+        call print_func
 
         
         main_loop:
@@ -113,7 +113,7 @@
         call draw_screen  
         
         call handle_input
-        mov rdi, 0x1000
+        mov rdi, 0x5000
         call usleep
         jmp main_loop
     
@@ -150,15 +150,24 @@
 
             push r11
             push rdi
+            push rbx
             ;calculate new ball x,y from ballvx,ballvy
-
+            mov ah,[ball_x]
+            mov al,[ball_y]
+            mov bl,[ball_vx]
+            mov bh,[ball_vy]
+            
+            add [ball_x],bl
+            add [ball_y],bh
+            
 
             xor r11,r11
             xor rdi,rdi
             imul r11,[ball_y],WIDTH
-            add r11,[ball_x],
+            add r11,[ball_x]
             add r11,screen
             mov BYTE [r11],BALL_CHAR
+            pop rbx 
             pop rdi
             pop r11
             ret
