@@ -6,7 +6,7 @@
     %define PADDLE_LEN  10 
     %define BALL_X 1  
     %define BALL_Y 1  
-    %define BALL_VX -1  
+    %define BALL_VX 1  
     %define BALL_VY 0 
     
     %define BALL_CHAR 0x11
@@ -145,6 +145,38 @@
             ret
 
 
+    ball_check_collisions:
+            push rax
+            push rbx
+            mov ah,[ball_x]
+            mov al,[ball_y]
+            mov bl,[ball_vx]
+            mov bh,[ball_vy]
+      
+            cmp ah,WIDTH-1
+            jg outside_right
+            cmp ah,0
+            je outside_left
+            jmp x_check_done 
+
+            outside_right: 
+            ;mov BYTE [ball_x],WIDTH-1
+            mov BYTE [ball_vx],-1
+            jmp x_check_done
+
+           
+            outside_left:
+            mov BYTE [ball_vx],1
+            
+            x_check_done:
+
+
+
+
+            all_check_done:
+            pop rbx
+            pop rax
+            ret
     do_ball:
         
 
@@ -152,6 +184,7 @@
             push rdi
             push rbx
             ;calculate new ball x,y from ballvx,ballvy
+            call ball_check_collisions
             mov ah,[ball_x]
             mov al,[ball_y]
             mov bl,[ball_vx]
