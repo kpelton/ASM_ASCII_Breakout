@@ -154,7 +154,7 @@
             mov bh,[ball_vy]
       
             cmp ah,WIDTH-1
-            jg outside_right
+            jge outside_right
             cmp ah,0
             je outside_left
             jmp x_check_done 
