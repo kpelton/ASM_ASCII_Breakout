@@ -5,9 +5,9 @@
     %define PADDLE_X  10  
     %define PADDLE_LEN  10 
     %define BALL_X 1  
-    %define BALL_Y 1  
+    %define BALL_Y 20  
     %define BALL_VX 1  
-    %define BALL_VY 0 
+    %define BALL_VY -1 
     
     %define BALL_CHAR 0x11
     %define LCHAR 'a'
@@ -102,7 +102,7 @@
         mov rax,screen
         call zero_screen_array
 
-
+        mov BYTE [screen+499],0x1
 
     ;    inc BYTE [ball_x]
         mov rax, cursor_home
@@ -170,6 +170,24 @@
             
             x_check_done:
 
+            cmp al, 0
+            je outside_top
+            cmp al, HEIGHT-2
+            jg outside_bottom
+            jmp y_check_done
+
+
+            outside_top:
+            mov BYTE [ball_vy],1
+            ;mov BYTE [ball_y],20
+            jmp y_check_done
+
+
+            outside_bottom:
+            mov BYTE [ball_vy],-1
+            
+           
+            y_check_done:
 
 
 
