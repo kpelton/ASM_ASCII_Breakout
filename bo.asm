@@ -4,6 +4,7 @@
     %define HEIGHT 25 
     %define PADDLE_X  10  
     %define PADDLE_LEN  10 
+    %define PADDLE_CEN 5
     %define BALL_X 12  
     %define BALL_Y 20  
     %define BALL_VX 0  
@@ -118,7 +119,12 @@
         call draw_screen  
         
         call handle_input
-        mov rdi, 0xf000
+        call handle_input
+        call handle_input
+        call handle_input
+        call handle_input
+        call handle_input
+        mov rdi, 0xa000
         call usleep
         
         jmp main_loop
@@ -225,7 +231,7 @@
             ; do modulo %2 on x
             mov rdx,1
             and rdx,r11
-            jz .copy_byte
+            jmp .copy_byte
             jmp .continue_loop
 
             .copy_byte:
@@ -296,9 +302,8 @@
             ;mov BYTE [ball_y],20
             jmp y_check_done
 
-
+            ;;;;;;;;;;;;;;;paddle collison code
             outside_bottom:
-            ;TODO: we need to check if the ball hits the paddle or not in this block
 
             mov cl,[paddle_len]
  
@@ -311,6 +316,26 @@
             jl .paddle_hit
             jmp .no_hit
             .paddle_hit:
+            
+            mov cl,[paddle_x]
+            add cl,PADDLE_CEN
+            cmp ah,cl
+            je .center_paddle    
+            jl .left_paddle
+            jg .right_paddle
+            .center_paddle: 
+            mov BYTE [ball_vx],0
+            jmp .done_paddle
+            .right_paddle: 
+            mov BYTE [ball_vx],1
+            jmp .done_paddle
+            .left_paddle: 
+            mov BYTE [ball_vx],-1
+            jmp .done_paddle
+
+
+        
+            .done_paddle:
             mov BYTE [ball_vy],-1
             jmp y_check_done 
 
@@ -319,11 +344,30 @@
             .no_hit:       
           
             mov BYTE [ball_vy],0
-            
+            ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
            
             y_check_done:
 
-
+            xor r11,r11
+            xor rdi,rdi
+            imul r11,[ball_y],WIDTH
+            add r11,[ball_x]
+            add r11,board
+            cmp BYTE [r11],0
+            jnz .clear_block
+            jmp all_check_done
+            .clear_block:
+            mov BYTE [r11],0
+            cmp BYTE [ball_vy],1
+            je .reverse_v
+            mov BYTE [ball_vy],1
+            jmp all_check_done
+            .reverse_v:
+            mov BYTE [ball_vy],-1
+            
 
             all_check_done:
             ; check if it hits the board here
