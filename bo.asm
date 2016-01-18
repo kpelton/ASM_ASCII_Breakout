@@ -298,7 +298,27 @@
 
 
             outside_bottom:
+            ;TODO: we need to check if the ball hits the paddle or not in this block
+
+            mov cl,[paddle_len]
+ 
+            cmp ah,[paddle_x]
+            jge .possible_hit
+            jmp .no_hit
+            .possible_hit: 
+            add cl,[paddle_x]
+            cmp ah,cl
+            jl .paddle_hit
+            jmp .no_hit
+            .paddle_hit:
             mov BYTE [ball_vy],-1
+            jmp y_check_done 
+
+
+
+            .no_hit:       
+          
+            mov BYTE [ball_vy],0
             
            
             y_check_done:
@@ -306,6 +326,8 @@
 
 
             all_check_done:
+            ; check if it hits the board here
+
             pop rbx
             pop rax
             ret
