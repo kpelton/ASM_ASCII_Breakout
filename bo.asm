@@ -4,9 +4,9 @@
     %define HEIGHT 25 
     %define PADDLE_X  10  
     %define PADDLE_LEN  10 
-    %define BALL_X 1  
+    %define BALL_X 12  
     %define BALL_Y 20  
-    %define BALL_VX 1  
+    %define BALL_VX 0  
     %define BALL_VY -1 
     
     %define BALL_CHAR 0x11
@@ -37,6 +37,12 @@
             %rep 25 
             dq 1,1,1,1,1,1,1,1,1,1
             %endrep 
+
+        board:
+            %rep 25
+            dq 0,0,0,0,0,0,0,0,0,0
+            %endrep
+
 
         screen2:
             %rep 30 
@@ -92,29 +98,29 @@
         call setup_terminal
 
 
-
         ;hide_cursor
         mov rax,hide_cursor
         call print_func
 
         
+        call gen_basic_board
         main_loop:
         mov rax,screen
         call zero_screen_array
 
-        mov BYTE [screen+499],0x1
-
-    ;    inc BYTE [ball_x]
         mov rax, cursor_home
         call print_func
-        call do_paddle
+      
         call do_ball
+        call do_board
+        call do_paddle
         mov rax,screen
         call draw_screen  
         
         call handle_input
-        mov rdi, 0x5000
+        mov rdi, 0xf000
         call usleep
+        
         jmp main_loop
     
     zero_screen_array:
@@ -143,6 +149,114 @@
             pop rdi
             pop r11
             ret
+
+
+     do_board:
+        push rdx
+        push r11
+        push r15
+        push rbp
+        push rdi
+        mov rbp,board
+        mov rdx,screen
+        xor r11,r11
+        xor rdi, rdi
+        .y_loop:
+            xor r15, r15 ;j
+            .x_len_loop:
+            ;calculate current offset
+            imul r11,rdi,WIDTH
+            add r11,r15
+            mov rbp,board
+            add rbp,r11
+            mov  ah,[rbp]
+            test ah,ah
+            jz .continue_loop
+            mov rdx,screen
+            add rdx,r11
+            mov [rdx],ah
+
+            .continue_loop:
+            inc r15
+            cmp r15,WIDTH
+            jl .x_len_loop
+            ;;; inner loop done
+            ;mov rax,newline
+            ;call print_func
+            inc rdi
+            cmp rdi,HEIGHT
+            jl .y_loop
+            pop rbp
+            pop r15
+            pop r11
+            pop rdx
+            pop rdi
+            ret
+
+
+     gen_basic_board:
+        push rdx
+        push r11
+        push r15
+        push rbp
+        push rdi
+        mov rbp,board
+        mov rdx,screen
+        mov r9,1
+        xor r11,r11
+        xor rdi, rdi
+        .y_loop:
+            xor r15, r15 ;j
+            .x_len_loop:
+            ;calculate current offset
+            imul r11,rdi,WIDTH
+            add r11,r15
+            mov rbp,board
+            add rbp,r11
+            
+            cmp rdi,2 
+            jg .g_than_2
+            jmp .continue_loop
+            .g_than_2:
+            cmp rdi, 15
+            jl .l_than_15
+            jmp .continue_loop
+            .l_than_15:
+            ; do modulo %2 on x
+            mov rdx,1
+            and rdx,r11
+            jz .copy_byte
+            jmp .continue_loop
+
+            .copy_byte:
+            mov rdx,1
+            and rdx,rdi
+            jz .continue_loop
+            mov QWORD [rbp],r9
+            cmp r9,1
+            je .switch_color
+            mov r9,1
+            jmp .continue_loop
+            .switch_color:
+            mov r9,2
+
+            .continue_loop:
+            inc r15
+            cmp r15,WIDTH
+            jl .x_len_loop
+            ;;; inner loop done
+            ;mov rax,newline
+            ;call print_func
+            inc rdi
+            cmp rdi,HEIGHT
+            jl .y_loop
+            pop rbp
+            pop r15
+            pop r11
+            pop rdx
+            pop rdi
+            ret
+
 
 
     ball_check_collisions:
