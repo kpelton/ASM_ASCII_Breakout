@@ -1,6 +1,30 @@
-    ;kpelton 2015
+   ;Copyright (c) 2016, Kyle D Pelton
+;All rights reserved.
+;
+;Redistribution and use in source and binary forms, with or without
+;modification, are permitted provided that the following conditions are met:
+;
+;1. Redistributions of source code must retain the above copyright notice, this
+;   list of conditions and the following disclaimer.
+;2. Redistributions in binary form must reproduce the above copyright notice,
+;   this list of conditions and the following disclaimer in the documentation
+;   and/or other materials provided with the distribution.
+;
+;THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+;ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+;WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+;DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+;ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+;(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+;LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+;ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+;(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+;SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+;
+; 
+
     global  _start
-    %define WIDTH 80
+    %define WIDTH 80 
     %define HEIGHT 25 
     %define PADDLE_X  10  
     %define PADDLE_LEN  10 
@@ -112,8 +136,8 @@
         mov rax, cursor_home
         call print_func
       
-        call do_ball
         call do_board
+        call do_ball
         call do_paddle
         mov rax,screen
         call draw_screen  
@@ -124,7 +148,7 @@
         call handle_input
         call handle_input
         call handle_input
-        mov rdi, 0xa000
+        mov rdi, 0x1000
         call usleep
         
         jmp main_loop
@@ -237,14 +261,14 @@
             .copy_byte:
             mov rdx,1
             and rdx,rdi
-            jz .continue_loop
+            ;jz .continue_loop
             mov QWORD [rbp],r9
-            cmp r9,1
+            cmp r9,3
             je .switch_color
-            mov r9,1
+            inc r9
             jmp .continue_loop
             .switch_color:
-            mov r9,2
+            mov r9,1
 
             .continue_loop:
             inc r15
