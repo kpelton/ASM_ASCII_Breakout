@@ -1,4 +1,4 @@
-   ;Copyright (c) 2016, Kyle D Pelton
+;Copyright (c) 2016, Kyle D Pelton
 ;All rights reserved.
 ;
 ;Redistribution and use in source and binary forms, with or without
@@ -41,7 +41,9 @@
     extern system
     extern getchar
     extern fcntl
+    extern sleep
     extern usleep
+    extern nanosleep
     extern sprintf
 
 
@@ -58,6 +60,7 @@
         hide_cursor: db   0x1b,"[?25l",0
         cursor_home: db 0x1b,"[H",0
         ball_char: db "@",0 
+        sleep_time: dq 0x00,0x1000000
         screen:
             %rep 25 
             dq 1,1,1,1,1,1,1,1,1,1
@@ -143,14 +146,9 @@
         call draw_screen  
         
         call handle_input
-        call handle_input
-        call handle_input
-        call handle_input
-        call handle_input
-        call handle_input
-        mov rdi, 0x1000
-        call usleep
-        
+        mov rdi, sleep_time
+        mov rsi, 0
+        call nanosleep
         jmp main_loop
     
     zero_screen_array:
